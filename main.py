@@ -7,6 +7,20 @@ from model import VAE, loss_function
 import torch.optim as optim
 import torch.nn.functional as F
 from utils import compare_dist
+from torch.utils.tensorboard import SummaryWriter
+import random
+
+# seed the random variables
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED) # for multi-GPU
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+
 
 def train(args):
     """
@@ -35,6 +49,10 @@ def train(args):
 
     # define optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    
+    # defie tensorboard write for train logging purpose
+    log_path = os.path.join(args.output_dir, "tensorboard")
+    writer = SummaryWriter(log_path)
 
     # training loop
     for epoch in range(args.num_epochs):
@@ -59,6 +77,12 @@ def train(args):
         recons_loss_avg = np.around(recons_loss_avg, decimals=4)
         kldiv_loss_avg = np.around(kldiv_loss_avg, decimals=4)
         loss_all_avg = np.around(loss_all_avg, decimals=4)
+        if (epoch+1) > 2: 
+            writer.add_scalars('Loss', 
+                            {'all':loss_all_avg,
+                                'recons':recons_loss_avg,
+                                'kldiv': kldiv_loss_avg},
+                                epoch+1)
 
         print(f"Epoch {epoch+1}/{args.num_epochs} --> loss all: {loss_all_avg}, loss recons: {recons_loss_avg}, loss_kldiv: {kldiv_loss_avg}")
     
