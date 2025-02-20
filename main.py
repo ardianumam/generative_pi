@@ -36,7 +36,7 @@ def train(args):
     # define optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    # Training loop
+    # training loop
     for epoch in range(args.num_epochs):
         recons_loss_avg = 0; kldiv_loss_avg = 0; loss_all_avg = 0
         for input in data_loader:
@@ -72,14 +72,14 @@ def train(args):
                 "opt_state_dict": optimizer.state_dict()}, 
                 os.path.join(args.model_store_path, "ckpt.pt"))
 
-    # sample new sample from the latent space: random Gaussian noise
+    # sample new data points from the latent space: random Gaussian noise
     model.eval()
-    gen_data = model.sample_new_img_from_rand(num_samples=5000)
+    gen_data = model.sample_new_img_from_rand(num_samples=dataset.n_pts)
     dataset.dump_data(data=gen_data,
                       dir_out=args.output_dir,
                       filename="gen_train_from-random-noise")
 
-    # sample new sample from the latent space: learned mean & var latent data
+    # sample new data points from the latent space: learned mean & var latent data
     gen_data = model.sample_new_img_from_learned_latent(input=dataset.data)
     dataset.dump_data(data=gen_data,
                       dir_out=args.output_dir,
@@ -100,18 +100,21 @@ def test(args):
     model = model.to(device)
 
     # load model weights
-    checkpoint = torch.load(os.path.join(args.model_store_path, "ckpt.pt"))
-    model.load_state_dict(checkpoint["model_state_dict"])
-    print(f"Model is loaded! Train epoch: {checkpoint['epoch']}, loss recons.: {checkpoint['loss_recons']}, loss kldiv.: {checkpoint['loss_kldiv']}")
-
-    # sample new sample from the latent space: random Gaussian noise
+    try:
+        checkpoint = torch.load(os.path.join(args.model_store_path, "ckpt.pt"))
+        model.load_state_dict(checkpoint["model_state_dict"])
+        print(f"Model is loaded! Train epoch: {checkpoint['epoch']}, loss recons.: {checkpoint['loss_recons']}, loss kldiv.: {checkpoint['loss_kldiv']}")
+    except:
+        raise Exception("Error when loading the pre-trained weight. Please check!")
+    
+    # sample new data points from the latent space: random Gaussian noise
     model.eval()
-    gen_data_rand_noise = model.sample_new_img_from_rand(num_samples=5000)
+    gen_data_rand_noise = model.sample_new_img_from_rand(num_samples=dataset.n_pts)
     dataset.dump_data(data=gen_data_rand_noise,
                       dir_out=args.output_dir,
                       filename="gen_test_from-random-noise")
 
-    # sample new sample from the latent space: learned mean & var latent data
+    # sample new data points from the latent space: learned mean & var latent data
     gen_data_learned_latent = model.sample_new_img_from_learned_latent(input=dataset.data)
     dataset.dump_data(data=gen_data_learned_latent,
                       dir_out=args.output_dir,

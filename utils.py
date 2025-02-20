@@ -5,11 +5,11 @@ import numpy as np
 def compare_dist(source, target, warp_funct):
     """
     To compare distribution between to foreground data using KL-divergece. This function will do foreground warping to image first before computing the KL-div
-    Args:
+    Params:
         source: Source data to be compared. Numpy data with shape = [N, 5], with N denoting number of data points and 5 for xyrgb data
         target: Target data to be compared. Numpy data with shape similar to source
         warp_funct: Warping function
-    Result:
+    Return:
         kldiv: The KL-divergene result. Scalar value. 
     """
     # warp the foreground data into the pre-defined image size
