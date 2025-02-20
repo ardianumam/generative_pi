@@ -16,14 +16,13 @@ def compare_dist(source, target, warp_funct):
     source = warp_funct(source) #[H, W, 3]
     target = warp_funct(target) #[H, W, 3]
 
-    # add small value for all-zeros to avoid undefined log values
+    # flatten and cast to float
     source = source.reshape((-1,3)).astype(np.float) #[n_pixels, 3]
-    source[source==0] = source[source==0] + 1e-10
     target = target.reshape((-1,3)).astype(np.float) #[n_pixels, 3]
-    target[target==0] = target[target==0] + 1e-10
-
+    
     # compute the kl-div
-    kldiv = F.kl_div(input=F.log_softmax(torch.from_numpy(source), dim=-1),
-                     target=F.softmax(torch.from_numpy(target), dim=-1),
+    kldiv = F.kl_div(input=F.log_softmax(torch.from_numpy(source).float(), dim=-1),
+                     target=F.softmax(torch.from_numpy(target).float(), dim=-1),
                      reduction='batchmean') # scalar
+    
     return np.around(kldiv, decimals=4)
