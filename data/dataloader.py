@@ -37,6 +37,29 @@ class PiDataset():
         data = data.astype(np.int32)
         return data
 
+    def warp_fg_to_image(self, fg_data):
+        """
+        Warp foreground data to image
+        Args:
+            fg_data: The foreground data to be warp. Shape = [n_data_point, xyrgb=5]
+        Return:
+            data_image: Numpy representing the image result. Shape = [H, W, 3]
+        """
+        # create a blank image
+        data_image = np.zeros((self.img_h, self.img_w, 3), dtype=np.uint8)
+
+        # transform the data back, from 0~1 into the original image size and color
+        # data = self.unnormalize_data(data)
+
+        # mask to consider only the valid pixels
+        mask = np.logical_and(np.logical_and(fg_data[:,0] >= 0, fg_data[:,0] < self.img_h), 
+                              np.logical_and(fg_data[:,1] >= 0, fg_data[:,1] < self.img_w)) 
+        
+        # warp the foregound data into image
+        fg_data = fg_data[mask].astype(np.int)
+        data_image[fg_data[:,0],fg_data[:,1]] = fg_data[:,2:]
+        return data_image
+
     def dump_data(self, data=None, dir_out=None, filename=None):
         assert data is not None, "data cannot be None!"
         assert data is not None, "filename cannot be None!"
@@ -45,35 +68,16 @@ class PiDataset():
         if dir_out is None: dir_out = os.path.join("ouput")
         os.makedirs(dir_out, exist_ok=True)
 
-        # create a blank image
-        data_image = np.zeros((300, 300, 3), dtype=np.uint8)
+        # warp the generated data to image
+        data = self.warp_fg_to_image(data)
 
-        # transform the data back, from 0~1 into the original image size and color
-        # data = self.unnormalize_data(data)
-
-        # populate the image with the dataset points
-        for x, y, r, g, b in data:
-            if 0 <= x < 300 and 0 <= y < 300:
-                data_image[int(x), int(y)] = [int(r), int(g), int(b)]
-
-        # save the verification image
-        data_image_pil = Image.fromarray(data_image)
+        # save the image into file
+        data_image_pil = Image.fromarray(data)
         filepath = os.path.join(dir_out, f'{filename}.png')
         data_image_pil.save(filepath)
 
         print(f"The data is writen in: {filepath}")
-    
-    def show_data(self):
-        # Create a blank image
-        data_image = np.zeros((300, 300, 3), dtype=np.uint8)
 
-        # Populate the image with the dataset points
-        for x, y, r, g, b in self.data:
-            data_image[int(x), int(y)] = [int(r), int(g), int(b)]
-
-        # Save the verification image
-        data_image_pil = Image.fromarray(data_image)
-        display(data_image_pil)
 
     def  __getitem__(self, item):
         return self.data[item]
