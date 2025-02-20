@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from PIL import Image
-from IPython.display import display
 
 class PiDataset():
     def __init__(self, root="data"):            

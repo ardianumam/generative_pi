@@ -1,6 +1,5 @@
 import os, argparse
 import numpy as np
-from PIL import Image
 from data import PiDataset
 import torch
 from torch.utils.data import DataLoader
@@ -27,7 +26,7 @@ def train(args):
     
     # write the original data for checking purpose
     dataset.dump_data(data=dataset.data,
-                      dir_out="output",
+                      dir_out=args.output_dir,
                       filename="data_ori")
     
     # create model
@@ -77,13 +76,13 @@ def train(args):
     model.eval()
     gen_data = model.sample_new_img_from_rand(num_samples=5000)
     dataset.dump_data(data=gen_data,
-                      dir_out="output",
+                      dir_out=args.output_dir,
                       filename="gen_train_from-random-noise")
 
     # sample new sample from the latent space: learned mean & var latent data
     gen_data = model.sample_new_img_from_learned_latent(input=dataset.data)
     dataset.dump_data(data=gen_data,
-                      dir_out="output",
+                      dir_out=args.output_dir,
                       filename="gen_train_from-learned-latent")
 
 
@@ -109,13 +108,13 @@ def test(args):
     model.eval()
     gen_data_rand_noise = model.sample_new_img_from_rand(num_samples=5000)
     dataset.dump_data(data=gen_data_rand_noise,
-                      dir_out="output",
+                      dir_out=args.output_dir,
                       filename="gen_test_from-random-noise")
 
     # sample new sample from the latent space: learned mean & var latent data
     gen_data_learned_latent = model.sample_new_img_from_learned_latent(input=dataset.data)
     dataset.dump_data(data=gen_data_learned_latent,
-                      dir_out="output",
+                      dir_out=args.output_dir,
                       filename="gen_test_from-learned-latent")
     
 
@@ -148,15 +147,16 @@ def test(args):
     
     print("************** Distribution info via KL divergence **************")
     print(f"1. Original data vs. gen. data (rand-noise)    : {kl_gen_rand_noise}")
-    print(f"1. Original data vs. gen. data (learned-latent): {kl_gen_learned_latent}")
-    print(f"2. Original data vs. random data               : {kl_rand}")
-    print(f"3. Original data vs. itself (as ref.)          : {kl_ori}")
+    print(f"2. Original data vs. gen. data (learned-latent): {kl_gen_learned_latent}")
+    print(f"3. Original data vs. random data               : {kl_rand}")
+    print(f"4. Original data vs. itself (as ref.)          : {kl_ori}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pi Generator arguments using VAE')
     parser.add_argument("--is_train", type=int, default=0, help="Set 1 to train or 0 to test")
     parser.add_argument("--use_cuda", type=int, default=0, help="Set 1 to use CUDA or 0 to use CPU")
     parser.add_argument("--model_store_path", type=str, default="model/store", help="Where to store the trained model")
+    parser.add_argument("--output_dir", type=str, default="output", help="Where to store the generated data output")
     parser.add_argument("--num_epochs", type=int, default="500", help="Number of training epochs")
     parser.add_argument("--batch_size", type=int, default="32", help="Training batch size")
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate")
