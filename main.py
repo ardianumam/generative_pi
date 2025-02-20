@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from model import VAE, loss_function
 import torch.optim as optim
 import torch.nn.functional as F
-
+from utils import compare_dist
 
 def train(args):
     """
@@ -120,26 +120,31 @@ def test(args):
     
 
     # compare distributions
-    target_data = torch.from_numpy(dataset.data).to(device)
+    target_data = np.copy(dataset.data)
     ## 1. compare original data vs. generated data from random noise
-    kl_gen_rand_noise = F.kl_div(input=F.log_softmax(torch.from_numpy(gen_data_rand_noise).to(device)),
-                                 target=F.softmax(target_data))
+    kl_gen_rand_noise = compare_dist(source=gen_data_rand_noise, 
+                                     target=target_data, 
+                                     warp_funct=dataset.warp_fg_to_image)
 
     ## 2. compare original data vs. generated data from random noise
-    kl_gen_learned_latent = F.kl_div(input=F.log_softmax(torch.from_numpy(gen_data_learned_latent).to(device)),
-                                     target=F.softmax(target_data))
+    kl_gen_learned_latent = compare_dist(source=gen_data_learned_latent,
+                                         target=target_data,
+                                         warp_funct=dataset.warp_fg_to_image)
        
     ## 3. compare original data vs. random data
-    rand_data = torch.rand(size=(dataset.n_pts, dataset.n_feat))
+    rand_data = np.random.rand(dataset.n_pts, dataset.n_feat)
     rand_data[:,0] = rand_data[:,0]*dataset.img_h
     rand_data[:,1] = rand_data[:,1]*dataset.img_w
+    rand_data[:,2:] = rand_data[:,2:]*255
 
-    kl_rand = F.kl_div(input=F.log_softmax(rand_data),
-                      target=F.softmax(target_data))
+    kl_rand = compare_dist(source=rand_data,
+                           target=target_data,
+                           warp_funct=dataset.warp_fg_to_image)
     
     ## 4. compare original data vs. itself as reference
-    kl_ori = F.kl_div(input=F.log_softmax(target_data),
-                      target=F.softmax(target_data))
+    kl_ori = compare_dist(source=target_data,
+                          target=target_data,
+                          warp_funct=dataset.warp_fg_to_image)
     
     print("************** Distribution info via KL divergence **************")
     print(f"1. Original data vs. gen. data (rand-noise)    : {kl_gen_rand_noise}")
