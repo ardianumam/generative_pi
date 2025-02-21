@@ -36,7 +36,7 @@ def train(args):
     data_loader = DataLoader(dataset, 
                              batch_size=args.batch_size, 
                              shuffle=True, 
-                             num_workers=4)
+                             num_workers=2)
     
     # write the original data for checking purpose
     dataset.dump_data(data=dataset.data,
@@ -77,7 +77,7 @@ def train(args):
         recons_loss_avg = np.around(recons_loss_avg, decimals=4)
         kldiv_loss_avg = np.around(kldiv_loss_avg, decimals=4)
         loss_all_avg = np.around(loss_all_avg, decimals=4)
-        if (epoch+1) > 2: 
+        if (epoch+1) >= 6: 
             writer.add_scalars('Loss', 
                             {'all':loss_all_avg,
                                 'recons':recons_loss_avg,
@@ -124,12 +124,12 @@ def test(args):
     model = model.to(device)
 
     # load model weights
-    try:
-        checkpoint = torch.load(os.path.join(args.model_store_path, "ckpt.pt"))
-        model.load_state_dict(checkpoint["model_state_dict"])
-        print(f"Model is loaded! Train epoch: {checkpoint['epoch']}, loss recons.: {checkpoint['loss_recons']}, loss kldiv.: {checkpoint['loss_kldiv']}")
-    except:
-        raise Exception("Error when loading the pre-trained weight. Please check!")
+    # try:
+    checkpoint = torch.load(os.path.join(args.model_store_path, "ckpt.pt"), weights_only=False)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    print(f"Model is loaded! Train epoch: {checkpoint['epoch']}, loss recons.: {checkpoint['loss_recons']}, loss kldiv.: {checkpoint['loss_kldiv']}")
+    # except:
+    #     raise Exception("Error when loading the pre-trained weight. Please check!")
     
     # sample new data points from the latent space: random Gaussian noise
     model.eval()
@@ -180,10 +180,10 @@ def test(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pi Generator arguments using VAE')
-    parser.add_argument("--is_train", type=int, default=0, help="Set 1 to train or 0 to test")
-    parser.add_argument("--use_cuda", type=int, default=0, help="Set 1 to use CUDA or 0 to use CPU")
+    parser.add_argument("--is_train", type=int, default=1, help="Set 1 to train or 0 to test")
+    parser.add_argument("--use_cuda", type=int, default=1, help="Set 1 to use CUDA or 0 to use CPU")
     parser.add_argument("--model_store_path", type=str, default="model/store", help="Where to store the trained model")
-    parser.add_argument("--output_dir", type=str, default="output", help="Where to store the generated data output")
+    parser.add_argument("--output_dir", type=str, default="explore", help="Where to store the generated data output")
     parser.add_argument("--num_epochs", type=int, default="500", help="Number of training epochs")
     parser.add_argument("--batch_size", type=int, default="32", help="Training batch size")
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate")

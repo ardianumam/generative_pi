@@ -63,7 +63,7 @@ class PiDataset():
                               np.logical_and(fg_data[:,1] >= 0, fg_data[:,1] < self.img_w)) 
         
         # warp the foregound data into image
-        fg_data = fg_data[mask].astype(np.int)
+        fg_data = fg_data[mask].astype(np.int32)
         data_image[fg_data[:,0],fg_data[:,1]] = fg_data[:,2:]
         return data_image
 

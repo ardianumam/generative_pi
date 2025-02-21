@@ -17,8 +17,8 @@ def compare_dist(source, target, warp_funct):
     target = warp_funct(target) #[H, W, 3]
 
     # flatten and cast to float
-    source = source.reshape((-1,3)).astype(np.float) #[n_pixels, 3]
-    target = target.reshape((-1,3)).astype(np.float) #[n_pixels, 3]
+    source = source.reshape((-1,3)).astype(np.float32) #[n_pixels, 3]
+    target = target.reshape((-1,3)).astype(np.float32) #[n_pixels, 3]
     
     # compute the kl-div
     kldiv = F.kl_div(input=F.log_softmax(torch.from_numpy(source).float(), dim=-1),
